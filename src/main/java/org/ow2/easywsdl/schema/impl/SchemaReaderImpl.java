@@ -134,7 +134,8 @@ public class SchemaReaderImpl extends AbstractSchemaReader implements org.ow2.ea
             IOException {
         try {
             InputSource inputSource;
-            if (httpClientBuilder == null) {
+            if (httpClientBuilder == null || !("http".equalsIgnoreCase(schemaURL.getProtocol
+                    ()) || "https".equalsIgnoreCase(schemaURL.getProtocol()))) {
                 inputSource = new InputSource(schemaURL.openStream());
             } else {
                 HttpGet httpGet = new HttpGet(schemaURL.toString());
@@ -220,17 +221,18 @@ public class SchemaReaderImpl extends AbstractSchemaReader implements org.ow2.ea
             AbsItfSchema> imports, boolean deleteImports, HttpClientBuilder httpClientBuilder) throws
             SchemaException,
             MalformedURLException, URISyntaxException {
+        URL wsdlURL = this.schemaLocationResolver.resolve(baseURI, schemaLocationURI);
         InputSource inputSource = null;
         try {
-            if (httpClientBuilder == null) {
-                inputSource = new InputSource(this.schemaLocationResolver.resolve(baseURI,
-                        schemaLocationURI).openStream());
+            if (httpClientBuilder == null || !("http".equalsIgnoreCase(wsdlURL.getProtocol
+                    ()) || "https".equalsIgnoreCase(wsdlURL.getProtocol()))) {
+                inputSource = new InputSource(wsdlURL.openStream());
             } else {
-                HttpGet httpGet = new HttpGet(this.schemaLocationResolver.resolve(baseURI, schemaLocationURI).toString());
+                HttpGet httpGet = new HttpGet(wsdlURL.toString());
                 CloseableHttpResponse response = httpClientBuilder.build().execute(httpGet);
                 inputSource = new InputSource(response.getEntity().getContent());
             }
-            inputSource.setSystemId(this.schemaLocationResolver.resolve(baseURI, schemaLocationURI).toString());
+            inputSource.setSystemId(wsdlURL.toString());
         } catch (IOException e) {
             throw new SchemaException(e);
         }
